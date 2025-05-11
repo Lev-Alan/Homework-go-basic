@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
-const USDtoRUB = 81.14
-const USDtoEUR = 0.88  
+ 
 
 func main() {
 	fmt.Print("_Конвертер валют_\n\n")
 	for{
 	currency1, number, currency2 := userInput()                         
 	result := calculateResult(currency1, currency2, number)
-	fmt.Printf("Ваш результат: %.04f\n\n", result)
+	fmt.Printf("Ваш результат: %.02f\n\n", result)
 	answer := question()
 	if !answer{
 		break
@@ -25,8 +25,9 @@ func userInput()(currency1 string, number float64, currency2 string ){
 	for{
 	fmt.Print("Введите исходную валюту (USD, EUR, RUB): ")
 	fmt.Scanln(&currency1)
+	currency1 = strings.ToUpper(currency1) // Приводим к верхнему регистру
 	if currency1 != "USD"  && currency1 != "EUR" && currency1 != "RUB"{
-		fmt.Printf("Вы задали неправильные параметры валюты.Повторите ввод \n\n")
+		fmt.Printf("Вы задали неправильные параметры валюты.Повторите ввод \n")
 		continue
 	}
 	break
@@ -43,7 +44,7 @@ func userInput()(currency1 string, number float64, currency2 string ){
             continue
         }
 	if number <=0 {
-		fmt.Printf("Вы задали неправильный параметр. Повторите ввод \n\n")
+		fmt.Printf("Вы задали неправильный параметр. Повторите ввод \n")
 		continue
 		}
 	break
@@ -60,8 +61,14 @@ case currency1 == "EUR":
 // ввод целевой валюты и обработка неправильного ввода
 for{
 fmt.Scanln(&currency2)
+currency2 = strings.ToUpper(currency2) //Приводим к верхнему регистру
+
 if currency2 != "EUR" && currency2!="RUB" && currency2!= "USD"{
-	fmt.Printf("Вам необходимо правильно указать целевую валюту \n\n")
+	fmt.Printf("Вам необходимо правильно указать целевую валюту \n")
+	continue
+}
+if currency2 == currency1{
+	fmt.Println("Вам необходимо ввести целевую валюту, которая будет отличаться от исходной. \n")
 	continue
 }
 break
@@ -70,22 +77,31 @@ break
 }
 
 // функция конвертации
-func calculateResult(currency1, currency2 string, number float64)(result float64){
-	switch{
-	case currency1 == "USD" && currency2 == "EUR":
-		result = USDtoEUR * number;
-	case currency1 == "USD" && currency2 == "RUB":
-		result = USDtoRUB * number;
-	case currency1 == "EUR" && currency2 == "USD":
-		result = number/USDtoEUR;
-	case currency1 == "EUR" && currency2 == "RUB":
-		result = number * USDtoRUB / USDtoEUR;
-	case currency1 == "RUB" && currency2 == "USD":
-		result = number / USDtoRUB;
-	case currency1 == "RUB" && currency2 == "EUR":
-		result = USDtoEUR * number / USDtoRUB
+const (
+	USDToRUB = 81.14
+	USDToEUR = 0.88
+	EURToRUB = USDToRUB / USDToEUR // Рассчитанный курс EUR к RUB
+)
+func calculateResult(currency1, currency2 string, number float64) float64 {
+	if currency1 == currency2 {
+		return number
 	}
-	return result
+	switch currency1 + "->" + currency2 {
+	case "USD->EUR":
+		return number * USDToEUR
+	case "USD->RUB":
+		return number * USDToRUB
+	case "EUR->USD":
+		return number / USDToEUR
+	case "EUR->RUB":
+		return number * EURToRUB
+	case "RUB->USD":
+		return number / USDToRUB
+	case "RUB->EUR":
+		return number / EURToRUB
+	default:
+		return 0
+	}
 }
 
 //Вопрос о продолжении конвертации
