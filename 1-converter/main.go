@@ -1,119 +1,92 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
- 
+
+const( 
+	USDToRUB = 81.14
+	USDtoEUR = 0.88
+	EURToRUB = USDToRUB/USDtoEUR
+)
 
 func main() {
-	fmt.Print("_Конвертер валют_\n\n")
+	fmt.Println("_Конвертер валют_")
+	number := enterNumber()
+	exchangeRates := map[string]map[string]float64{
+		"RUB": {
+			"EUR": number * USDtoEUR / USDToRUB,
+			"USD": number / USDToRUB,
+		},
+		"USD": {
+			"RUB": number * USDToRUB,
+			"EUR": number * USDtoEUR,
+		},
+		"EUR": {
+			"RUB": number * USDToRUB / USDtoEUR,
+			"USD": number / USDtoEUR,
+		},
+	}
+	currency1, currency2 :=currencylInput(&exchangeRates)
+
+	fmt.Print("Результат: ", exchangeRates[currency1][currency2] )
+}
+// Получаем данные о конвертируемой сумме денег
+func enterNumber()(number float64){
+	fmt.Println("Введите сумму, которую необходимо конвертировать. ")
 	for{
-	currency1, number, currency2 := userInput()                         
-	result := calculateResult(currency1, currency2, number)
-	fmt.Printf("Ваш результат: %.02f\n\n", result)
-	answer := question()
-	if !answer{
+		fmt.Scan(&number)
+		fmt.Scanln(new(string))
+		if number <=0 {
+			fmt.Println("\nВы задали неправильные параметры. Пожалуйста, повторите ввод.")
+			continue
+		}
 		break
 	}
+	return number
 }
-}
-//
-//функция ввода данных пользователем
-func userInput()(currency1 string, number float64, currency2 string ){              
-	// ввод исходной валюты и обработка неправильного ввода
-	for{
-	fmt.Print("Введите исходную валюту (USD, EUR, RUB): ")
-	fmt.Scanln(&currency1)
-	currency1 = strings.ToUpper(currency1) // Приводим к верхнему регистру
-	if currency1 != "USD"  && currency1 != "EUR" && currency1 != "RUB"{
-		fmt.Printf("Вы задали неправильные параметры валюты.Повторите ввод \n")
-		continue
+
+//Функция ввода валюты с валидацией
+func currencylInput(exchangeRates *map[string]map[string]float64 )(string, string){
+	errorInput:=fmt.Sprint("Ошибка. Выберите вариант из списка: ")
+	var currency1, currency2 string
+	fmt.Println("Введите исходную валюту")
+	//Вывод доступных вариантов исходной валюты
+	for key := range *exchangeRates{
+		fmt.Println("-", key)
 	}
-	break
-}
-	// ввод количества денег, которое необходимо конвертировать; обработка ошибки ввода
 	for{
-	fmt.Print("Введите количество денег, которое необходимо конвертировать: ")
-		_, err := fmt.Scanln(&number)
-        if err != nil {
-            fmt.Println("Ошибка ввода! Нужно ввести число.")
-            // Очищаем буфер ввода (на случай лишней строки)
-            var trash string
-            fmt.Scanln(&trash)
-            continue
-        }
-	if number <=0 {
-		fmt.Printf("Вы задали неправильный параметр. Повторите ввод \n")
-		continue
+		currency1=input()
+		if _, ok := (*exchangeRates)[currency1]; ok{
+			break
 		}
-	break
-}
-// Вывод варианта валюты на основе предыдущего ввода
-switch {
-case currency1 == "USD":
-	fmt.Print("Введите валюту, в которую вам необходимо конвертировать деньги (EUR, RUB): ");
-case currency1 == "EUR":
-	fmt.Print("Введите валюту, в которую вам необходимо конвертировать деньги (USD, RUB): ");
-	default: 
-	fmt.Print("Введите валюту, в которую вам необходимо конвертировать деньги (USD, EUR): ")
-}
-// ввод целевой валюты и обработка неправильного ввода
-for{
-fmt.Scanln(&currency2)
-currency2 = strings.ToUpper(currency2) //Приводим к верхнему регистру
-
-if currency2 != "EUR" && currency2!="RUB" && currency2!= "USD"{
-	fmt.Printf("Вам необходимо правильно указать целевую валюту \n")
-	continue
-}
-if currency2 == currency1{
-	fmt.Println("Вам необходимо ввести целевую валюту, которая будет отличаться от исходной. \n")
-	continue
-}
-break
-}
-	return currency1, number, currency2
+		fmt.Print(errorInput)
+	}
+	fmt.Println("В какую валюту конвертировать: ")
+	//Вывод доступных вариантов целевой валюты
+	for key := range (*exchangeRates)[currency1]{
+		fmt.Println("-", key)
+	}
+	for{
+		currency2=input()
+		if _, ok := (*exchangeRates)[currency1][currency2]; ok{
+			break
+		}
+		fmt.Print(errorInput)
+	}
+		return currency1, currency2
 }
 
-// функция конвертации
-const (
-	USDToRUB = 81.14
-	USDToEUR = 0.88
-	EURToRUB = USDToRUB / USDToEUR // Рассчитанный курс EUR к RUB
-)
-func calculateResult(currency1, currency2 string, number float64) float64 {
-	if currency1 == currency2 {
-		return number
-	}
-	switch currency1 + "->" + currency2 {
-	case "USD->EUR":
-		return number * USDToEUR
-	case "USD->RUB":
-		return number * USDToRUB
-	case "EUR->USD":
-		return number / USDToEUR
-	case "EUR->RUB":
-		return number * EURToRUB
-	case "RUB->USD":
-		return number / USDToRUB
-	case "RUB->EUR":
-		return number / EURToRUB
-	default:
-		return 0
-	}
+// Универсальный запрос на ввод валюты
+func input()string{
+	scaner:=bufio.NewScanner(os.Stdin)
+	scaner.Scan()
+	input:=strings.ToUpper(strings.TrimSpace(scaner.Text()))
+	return input
 }
 
-//Вопрос о продолжении конвертации
- func question ()bool{
-	fmt.Print("Хотите ли вы продолжить? (y/n): ")
-	var answer string
-	fmt.Scan(&answer)
-	if answer == "y" || answer == "Y"{
-		var trash string
-        fmt.Scanln(&trash)
-		return true
-		
-	}
-	return false
- }
+
+
