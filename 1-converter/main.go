@@ -30,8 +30,9 @@ func main() {
 			"USD": number / USDtoEUR,
 		},
 	}
-	currency1, currency2 :=currencylInput(exchangeRates)
-	fmt.Printf("%0.0f %s = %0.2f %s",number,currency1,exchangeRates[currency1][currency2],currency2)
+	currency1, currency2 :=currencylInput(&exchangeRates)
+
+	fmt.Print("Результат: ", exchangeRates[currency1][currency2] )
 }
 // Получаем данные о конвертируемой сумме денег
 func enterNumber()(number float64){
@@ -49,29 +50,29 @@ func enterNumber()(number float64){
 }
 
 //Функция ввода валюты с валидацией
-func currencylInput(exchangeRates map[string]map[string]float64 )(string, string){
+func currencylInput(exchangeRates *map[string]map[string]float64 )(string, string){
 	errorInput:=fmt.Sprint("Ошибка. Выберите вариант из списка: ")
 	var currency1, currency2 string
 	fmt.Println("Введите исходную валюту")
 	//Вывод доступных вариантов исходной валюты
-	for key := range exchangeRates{
+	for key := range *exchangeRates{
 		fmt.Println("-", key)
 	}
 	for{
 		currency1=input()
-		if _, ok := exchangeRates[currency1]; ok{
+		if _, ok := (*exchangeRates)[currency1]; ok{
 			break
 		}
 		fmt.Print(errorInput)
 	}
 	fmt.Println("В какую валюту конвертировать: ")
 	//Вывод доступных вариантов целевой валюты
-	for key := range exchangeRates[currency1]{
+	for key := range (*exchangeRates)[currency1]{
 		fmt.Println("-", key)
 	}
 	for{
 		currency2=input()
-		if _, ok := exchangeRates[currency1][currency2]; ok{
+		if _, ok := (*exchangeRates)[currency1][currency2]; ok{
 			break
 		}
 		fmt.Print(errorInput)
